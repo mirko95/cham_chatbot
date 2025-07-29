@@ -1,5 +1,6 @@
 {
   "name": "Chameleon AI Chatbot",
   "description": "A website-aware Q&A chatbot that uses RAG to answer user questions based on website content. It can collect contact information and is designed to be embedded as a customizable iframe widget.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "prompt": ""
 }
