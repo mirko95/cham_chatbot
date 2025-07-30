@@ -30,11 +30,6 @@ const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Langu
         </option>
       ))}
     </select>
-    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-300">
-      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-      </svg>
-    </div>
   </div>
 );
 
@@ -47,15 +42,17 @@ const Header: React.FC<{
 }> = ({ onClose, logoUrl = "/chameleon-logo.png", language, setLanguage, headerTitle }) => (
   <div className="bg-primary p-4 flex justify-between items-center text-white rounded-t-lg">
     <div className="flex items-center space-x-3">
-      <img src={logoUrl} alt="Company Logo" className="w-8 h-8 rounded-full" />
+      <img 
+        src={logoUrl} 
+        alt="Company Logo" 
+        className="w-8 h-8 object-contain rounded-full bg-white p-1"
+      />
       <h3 className="font-bold text-lg">{headerTitle}</h3>
     </div>
     <div className="flex items-center space-x-3">
       <LanguageSelector language={language} setLanguage={setLanguage} />
-      <button onClick={onClose} className="text-white hover:text-gray-200" aria-label="Close chat">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+      <button onClick={onClose} className="text-white hover:text-gray-200 font-bold text-lg">
+        ×
       </button>
     </div>
   </div>
@@ -66,18 +63,18 @@ const renderFormattedText = (text: string): JSX.Element => {
   const elements: JSX.Element[] = [];
   let listItems: JSX.Element[] = [];
 
-  const parseLine = (line: string) => {
-    return line.split(/(\*\*.*?\*\*)/g).map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i}>{part.slice(2, -2)}</strong>;
-      }
-      return part;
-    });
-  };
+  const parseLine = (line: string) =>
+    line.split(/(\*\*.*?\*\*)/g).map((part, i) =>
+      part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong> : part
+    );
 
   const flushList = () => {
     if (listItems.length > 0) {
-      elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-outside pl-5 space-y-1 my-2">{listItems}</ul>);
+      elements.push(
+        <ul key={`ul-${elements.length}`} className="list-disc list-outside pl-5 space-y-1 my-2">
+          {listItems}
+        </ul>
+      );
       listItems = [];
     }
   };
@@ -118,9 +115,7 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
             `}
           >
             {msg.sender === 'bot' ? (
-              <div className="text-sm">
-                {renderFormattedText(msg.text)}
-              </div>
+              <div className="text-sm">{renderFormattedText(msg.text)}</div>
             ) : (
               <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
             )}
@@ -179,11 +174,8 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
           type="submit"
           disabled={isLoading}
           className="bg-primary text-white p-2 rounded-lg hover:bg-primary-focus disabled:bg-gray-400 disabled:cursor-not-allowed"
-          aria-label="Send message"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-          </svg>
+          ➤
         </button>
       </form>
     </div>
@@ -196,7 +188,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   messages, 
   isLoading, 
   onSubmit, 
-  logoUrl = "/chameleon-logo.png", // default from public
+  logoUrl = "/chameleon-logo.png",
   language,
   setLanguage,
   headerTitle,
