@@ -8,12 +8,12 @@ import { DEFAULT_LOGO, DEFAULT_PRIMARY_COLOR, DEFAULT_PRIMARY_FOCUS_COLOR, suppo
 import { PDF_CONTENT } from './pdfContent';
 
 const getInitialLanguage = (): Language => {
-  // 1. Try to get language from parent window (host page)
+  // 1. Try to get language from parent window (host page) or current window
   try {
-    // Access parent document lang attribute
-    const parentLang = window.parent.document.documentElement.lang.split(/[-_]/)[0];
-    if (supportedLanguages.includes(parentLang as Language)) {
-      return parentLang as Language;
+    // Access parent document lang attribute. In standalone mode, parent is the window itself.
+    const docLang = window.parent.document.documentElement.lang.split(/[-_]/)[0];
+    if (supportedLanguages.includes(docLang as Language)) {
+      return docLang as Language;
     }
   } catch (e) {
     // This can fail due to cross-origin policies, which is fine.
@@ -71,41 +71,47 @@ const App: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Effect to listen for language changes on the parent page
+  // Effect to listen for language changes on the parent page (or current page if not in an iframe)
   useEffect(() => {
-    if (window.parent === window) {
-      return; // Not in an iframe, do nothing
-    }
-
     let observer: MutationObserver;
     try {
+      // This will target the host page's <html> element when in an iframe,
+      // or the current app's <html> element when running standalone.
       const targetNode = window.parent.document.documentElement;
 
       const callback = (mutationsList: MutationRecord[]) => {
         for (const mutation of mutationsList) {
           if (mutation.type === 'attributes' && mutation.attributeName === 'lang') {
-            const newLang = (mutation.target as HTMLElement).lang.split(/[-_]/)[0];
-            // Check if it's a new, supported language before updating state
-            if (supportedLanguages.includes(newLang as Language) && newLang !== language) {
-              setLanguage(newLang as Language);
+            const newLangValue = (mutation.target as HTMLElement).lang;
+            if (newLangValue) {
+              const newLang = newLangValue.split(/[-_]/)[0];
+              setLanguage(currentLanguage => {
+                if (supportedLanguages.includes(newLang as Language) && newLang !== currentLanguage) {
+                  return newLang as Language;
+                }
+                return currentLanguage; // No change if language is unsupported or the same
+              });
             }
           }
         }
       };
       
       observer = new MutationObserver(callback);
+      // Observe changes to the 'lang' attribute
       observer.observe(targetNode, { attributes: true, attributeFilter: ['lang'] });
 
     } catch (e) {
-      console.info("Could not set up language observer, likely due to cross-origin policies.");
+      // This catch block will handle cross-origin errors when trying to access window.parent.document
+      console.info("Could not set up language observer, likely due to cross-origin policies. Language will not sync automatically.");
     }
     
+    // Cleanup function to disconnect the observer when the component unmounts
     return () => {
       if (observer) {
         observer.disconnect();
       }
     };
-  }, [language]); // Rerun if language changes to ensure the callback closure has the latest state.
+  }, []); // Empty dependency array: run only once on mount.
 
   useEffect(() => {
     const rootStyle = document.documentElement.style;
