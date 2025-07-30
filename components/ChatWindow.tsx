@@ -40,7 +40,13 @@ const Header: React.FC<{
   setLanguage: (lang: Language) => void;
   headerTitle: string;
 }> = ({ onClose, logoUrl = "/chameleon-logo.png", language, setLanguage, headerTitle }) => (
-  <div className="bg-primary p-4 flex justify-between items-center text-white rounded-t-lg">
+  <div 
+  className="bg-primary p-4 flex justify-between items-center text-white"
+  style={{
+    borderTopLeftRadius: 'var(--border-radius-lg)',
+    borderTopRightRadius: 'var(--border-radius-lg)'
+  }}
+>
     <div className="flex items-center space-x-3">
       <img 
         src={logoUrl} 
