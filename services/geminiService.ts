@@ -1,24 +1,24 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { GEMINI_MODEL } from './constants';
-import { ContactInfo, Language } from "./types";
+import { GEMINI_MODEL } from '../constants';
+import { ContactInfo, Language } from "../types";
 
 if (!process.env.API_KEY) {
-  console.warn("API_KEY environment variable not set. Using a placeholder key. Chatbot functionality will be limited.");
+    console.warn("API_KEY environment variable not set. Using a placeholder key. Chatbot functionality will be limited.");
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "API_KEY_PLACEHOLDER" });
 
 interface Part {
-    text: string;
+        text: string;
 }
 export interface Content {
-    role: 'user' | 'model';
-    parts: Part[];
+        role: 'user' | 'model';
+        parts: Part[];
 }
 
 export const getAnswer = async (history: Content[], context: string, language: Language): Promise<string> => {
-  const systemInstruction = `You are a helpful and friendly conversational assistant named Chameleon. Your primary goal is to answer user questions based on the provided document context.
+    const systemInstruction = `You are a helpful and friendly conversational assistant named Chameleon. Your primary goal is to answer user questions based on the provided document context.
 
 **Your rules are:**
 1.  **Language**: Your response MUST be in the language specified by this code: \`${language}\`. All your answers, including greetings, apologies, or system messages, must be in this language.
@@ -43,7 +43,7 @@ ${context}
             thinkingConfig: { thinkingBudget: 0 }
         }
     });
-    return response.text;
+    return response.text || "";
   } catch (error) {
     console.error("Error generating content with Gemini:", error);
     return "I'm experiencing technical difficulties. Please try again in a moment.";

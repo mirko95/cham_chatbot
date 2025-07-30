@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { JSX } from 'react';
 import { Message, Language } from '../types';
 import { supportedLanguages } from '../constants';
 

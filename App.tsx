@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getAnswer, sendContactEmail, Content } from './geminiService';
 import { ChatBubble } from './components/ChatBubble';
 import { ChatWindow } from './components/ChatWindow';

@@ -43,7 +43,7 @@ ${context}
             thinkingConfig: { thinkingBudget: 0 }
         }
     });
-    return response.text;
+    return response.text ?? "I'm experiencing technical difficulties. Please try again in a moment.";
   } catch (error) {
     console.error("Error generating content with Gemini:", error);
     return "I'm experiencing technical difficulties. Please try again in a moment.";
