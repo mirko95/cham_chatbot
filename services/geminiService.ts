@@ -3,11 +3,12 @@ import { GoogleGenAI } from "@google/genai";
 import { GEMINI_MODEL } from '../constants';
 import { ContactInfo, Language } from "../types";
 
-if (!process.env.API_KEY) {
-    console.warn("API_KEY environment variable not set. Using a placeholder key. Chatbot functionality will be limited.");
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+if (!apiKey) {
+    console.warn("VITE_GEMINI_API_KEY is not set. Using a placeholder key. Chatbot functionality will be limited.");
 }
+const ai = new GoogleGenAI({ apiKey: apiKey || "API_KEY_PLACEHOLDER" });
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "API_KEY_PLACEHOLDER" });
 
 interface Part {
         text: string;
