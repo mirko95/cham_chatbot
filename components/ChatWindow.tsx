@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Message } from '../types';
+import { Message, Language } from '../types';
+import { supportedLanguages } from '../constants';
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -9,21 +10,93 @@ interface ChatWindowProps {
   isLoading: boolean;
   onSubmit: (text: string) => void;
   logoUrl: string;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  headerTitle: string;
+  inputPlaceholder: string;
 }
 
-const Header: React.FC<{ onClose: () => void; logoUrl: string }> = ({ onClose, logoUrl }) => (
+const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Language) => void; }> = ({ language, setLanguage }) => (
+    <div className="relative">
+        <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as Language)}
+            className="bg-primary appearance-none cursor-pointer border border-gray-400 hover:border-white text-white rounded-md py-1 pl-2 pr-7 focus:outline-none focus:ring-1 focus:ring-white"
+            aria-label="Select language"
+        >
+            {supportedLanguages.map(lang => (
+                <option key={lang} value={lang} className="bg-gray-800 font-semibold text-white">
+                    {lang.toUpperCase()}
+                </option>
+            ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-300">
+            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        </div>
+    </div>
+);
+
+
+const Header: React.FC<{ 
+    onClose: () => void; 
+    logoUrl: string;
+    language: Language; 
+    setLanguage: (lang: Language) => void;
+    headerTitle: string;
+}> = ({ onClose, logoUrl, language, setLanguage, headerTitle }) => (
   <div className="bg-primary p-4 flex justify-between items-center text-white rounded-t-lg">
     <div className="flex items-center space-x-3">
-        <img src={logoUrl} alt="Company Logo" className="w-8 h-8 rounded-full bg-white p-1"/>
-        <h3 className="font-bold text-lg">Chameleon Assistant</h3>
+        <img src={logoUrl} alt="Company Logo" className="w-8 h-8 rounded-full"/>
+        <h3 className="font-bold text-lg">{headerTitle}</h3>
     </div>
-    <button onClick={onClose} className="text-white hover:text-gray-200" aria-label="Close chat">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
+    <div className="flex items-center space-x-3">
+        <LanguageSelector language={language} setLanguage={setLanguage} />
+        <button onClick={onClose} className="text-white hover:text-gray-200" aria-label="Close chat">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+        </button>
+    </div>
   </div>
 );
+
+const renderFormattedText = (text: string): JSX.Element => {
+    const lines = text.split('\n');
+    const elements: JSX.Element[] = [];
+    let listItems: JSX.Element[] = [];
+
+    const parseLine = (line: string) => {
+        return line.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={i}>{part.slice(2, -2)}</strong>;
+            }
+            return part;
+        });
+    };
+
+    const flushList = () => {
+      if (listItems.length > 0) {
+        elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-outside pl-5 space-y-1 my-2">{listItems}</ul>);
+        listItems = [];
+      }
+    };
+
+    lines.forEach((line, index) => {
+      if (line.trim().startsWith('* ')) {
+        const content = line.trim().substring(2);
+        listItems.push(<li key={index}>{parseLine(content)}</li>);
+      } else {
+        flushList();
+        if (line.trim() !== '') {
+          elements.push(<p key={index} className="mb-2 last:mb-0">{parseLine(line)}</p>);
+        }
+      }
+    });
+
+    flushList();
+
+    return <>{elements}</>;
+};
 
 const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ messages, isLoading }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,7 +116,13 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
               ${msg.sender === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}
             `}
           >
-            <p className="text-sm">{msg.text}</p>
+             {msg.sender === 'bot' ? (
+                <div className="text-sm">
+                    {renderFormattedText(msg.text)}
+                </div>
+            ) : (
+                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+            )}
           </div>
         </div>
       ))}
@@ -64,8 +143,15 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   );
 };
 
-const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean }> = ({ onSubmit, isLoading }) => {
+const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean; placeholder: string; isOpen: boolean; }> = ({ onSubmit, isLoading, placeholder, isOpen }) => {
   const [text, setText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen && !isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isOpen, isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,12 +165,14 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
     <div className="border-t border-gray-200 p-2 bg-white rounded-b-lg">
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <input
+          ref={inputRef}
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Type your message..."
+          placeholder={placeholder}
           className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-focus"
           disabled={isLoading}
+          aria-disabled={isLoading}
         />
         <button
           type="submit"
@@ -101,7 +189,18 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   );
 };
 
-export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, messages, isLoading, onSubmit, logoUrl }) => {
+export const ChatWindow: React.FC<ChatWindowProps> = ({ 
+    isOpen, 
+    onClose, 
+    messages, 
+    isLoading, 
+    onSubmit, 
+    logoUrl,
+    language,
+    setLanguage,
+    headerTitle,
+    inputPlaceholder,
+}) => {
   return (
     <div
       className={`
@@ -115,9 +214,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose, message
         ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
       `}
     >
-      <Header onClose={onClose} logoUrl={logoUrl} />
-      <MessageList messages={messages} isLoading={isLoading} />
-      <ChatInput onSubmit={onSubmit} isLoading={isLoading} />
+      <Header 
+        onClose={onClose} 
+        logoUrl={logoUrl} 
+        language={language} 
+        setLanguage={setLanguage} 
+        headerTitle={headerTitle}
+      />
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+            <MessageList messages={messages} isLoading={isLoading} />
+        </div>
+      <ChatInput onSubmit={onSubmit} isLoading={isLoading} placeholder={inputPlaceholder} isOpen={isOpen} />
     </div>
   );
 };

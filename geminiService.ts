@@ -64,7 +64,6 @@ export const sendContactEmail = async (contactInfo: ContactInfo): Promise<boolea
         _subject: `New Lead from Chatbot: ${contactInfo.name}`,
     };
 
-    // Replace the simulated email with a real HTTP POST request.
     try {
         const response = await fetch(FORMSPREE_ENDPOINT, {
             method: 'POST',
