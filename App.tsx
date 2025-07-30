@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getAnswer, sendContactEmail, Content } from './services/geminiService';
 import { ChatBubble } from './components/ChatBubble';
 import { ChatWindow } from './components/ChatWindow';
@@ -70,6 +70,42 @@ const App: React.FC = () => {
     window.parent.postMessage({ type: 'CHAMELEON_READY' }, '*');
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Effect to listen for language changes on the parent page
+  useEffect(() => {
+    if (window.parent === window) {
+      return; // Not in an iframe, do nothing
+    }
+
+    let observer: MutationObserver;
+    try {
+      const targetNode = window.parent.document.documentElement;
+
+      const callback = (mutationsList: MutationRecord[]) => {
+        for (const mutation of mutationsList) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'lang') {
+            const newLang = (mutation.target as HTMLElement).lang.split(/[-_]/)[0];
+            // Check if it's a new, supported language before updating state
+            if (supportedLanguages.includes(newLang as Language) && newLang !== language) {
+              setLanguage(newLang as Language);
+            }
+          }
+        }
+      };
+      
+      observer = new MutationObserver(callback);
+      observer.observe(targetNode, { attributes: true, attributeFilter: ['lang'] });
+
+    } catch (e) {
+      console.info("Could not set up language observer, likely due to cross-origin policies.");
+    }
+    
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [language]); // Rerun if language changes to ensure the callback closure has the latest state.
 
   useEffect(() => {
     const rootStyle = document.documentElement.style;
