@@ -45,7 +45,7 @@ const Header: React.FC<{
       <img 
         src={logoUrl} 
         alt="Company Logo" 
-        className="w-8 h-8 object-contain rounded-full bg-white p-1"
+        className="w-10 h-10 object-contain bg-transparent" 
       />
       <h3 className="font-bold text-lg">{headerTitle}</h3>
     </div>
@@ -57,6 +57,7 @@ const Header: React.FC<{
     </div>
   </div>
 );
+
 
 const renderFormattedText = (text: string): JSX.Element => {
   const lines = text.split('\n');
@@ -107,7 +108,13 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
     <div className="flex-1 p-4 space-y-4 overflow-y-auto bg-white">
       {messages.map((msg) => (
         <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-          {msg.sender === 'bot' && <div className="w-6 h-6 bg-primary rounded-full flex-shrink-0"></div>}
+          {msg.sender === 'bot' && (
+            <img 
+              src="/chameleon-logo.png"
+              alt="Bot Avatar"
+              className="w-6 h-6 object-contain rounded-full bg-white p-0.5 border border-gray-300 flex-shrink-0"
+            />
+          )}
           <div
             className={`
               max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-xl
@@ -124,7 +131,11 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
       ))}
       {isLoading && (
         <div className="flex items-end gap-2 justify-start">
-          <div className="w-6 h-6 bg-primary rounded-full flex-shrink-0"></div>
+          <img 
+            src="/chameleon-logo.png"
+            alt="Bot Avatar"
+            className="w-6 h-6 object-contain rounded-full bg-white p-0.5 border border-gray-300 flex-shrink-0"
+          />
           <div className="bg-gray-200 text-gray-800 rounded-xl rounded-bl-none px-4 py-3">
             <div className="flex items-center justify-center space-x-1">
               <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -188,7 +199,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   messages, 
   isLoading, 
   onSubmit, 
-  logoUrl = "/chameleon-logo.png",
   language,
   setLanguage,
   headerTitle,
@@ -209,7 +219,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     >
       <Header 
         onClose={onClose} 
-        logoUrl={logoUrl} 
         language={language} 
         setLanguage={setLanguage} 
         headerTitle={headerTitle}
