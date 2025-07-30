@@ -1,24 +1,37 @@
-
 import { GoogleGenAI } from "@google/genai";
-import { GEMINI_MODEL } from '../constants';
+import { GEMINI_MODEL } from "../constants";
 import { ContactInfo, Language } from "../types";
 
+// Read API key from environment
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-if (!apiKey) {
-    console.warn("VITE_GEMINI_API_KEY is not set. Using a placeholder key. Chatbot functionality will be limited.");
+
+// Debug log (safe: shows first & last 3 characters only)
+if (apiKey) {
+    console.log(
+        `Gemini API Key loaded: ${apiKey.slice(0, 3)}***${apiKey.slice(-3)}`
+    );
+} else {
+    console.warn(
+        "VITE_GEMINI_API_KEY is not set! Using a placeholder key. Chatbot functionality will be limited."
+    );
 }
+
+// Initialize Gemini AI client
 const ai = new GoogleGenAI({ apiKey: apiKey || "API_KEY_PLACEHOLDER" });
 
-
 interface Part {
-        text: string;
+    text: string;
 }
 export interface Content {
-        role: 'user' | 'model';
-        parts: Part[];
+    role: "user" | "model";
+    parts: Part[];
 }
 
-export const getAnswer = async (history: Content[], context: string, language: Language): Promise<string> => {
+export const getAnswer = async (
+    history: Content[],
+    context: string,
+    language: Language
+): Promise<string> => {
     const systemInstruction = `You are a helpful and friendly conversational assistant named Chameleon. Your primary goal is to answer user questions based on the provided document context.
 
 **Your rules are:**
@@ -35,43 +48,43 @@ ${context}
 ---
 `;
 
-  try {
-    const response = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: history,
-        config: {
-            systemInstruction: systemInstruction,
-            thinkingConfig: { thinkingBudget: 0 }
-        }
-    });
-    return response.text || "";
-  } catch (error) {
-    console.error("Error generating content with Gemini:", error);
-    return "I'm experiencing technical difficulties. Please try again in a moment.";
-  }
+    try {
+        const response = await ai.models.generateContent({
+            model: GEMINI_MODEL,
+            contents: history,
+            config: {
+                systemInstruction: systemInstruction,
+                thinkingConfig: { thinkingBudget: 0 }
+            }
+        });
+
+        return response.text || "";
+    } catch (error) {
+        console.error("Error generating content with Gemini:", error);
+        return "I'm experiencing technical difficulties. Please try again in a moment.";
+    }
 };
 
-export const sendContactEmail = async (contactInfo: ContactInfo): Promise<boolean> => {
+export const sendContactEmail = async (
+    contactInfo: ContactInfo
+): Promise<boolean> => {
     // IMPORTANT: To make this work, you need to replace the placeholder URL below.
     // 1. Go to https://formspree.io/ and create a new form.
     // 2. You will be given an endpoint URL.
     // 3. Replace 'YOUR_FORM_ID_HERE' with your actual form ID.
-    const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID_HERE';
+    const FORMSPREE_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID_HERE";
 
-    // We send the raw data to Formspree, which will format and send the email.
-    // Formspree uses the `_subject` field to set the email subject line.
     const dataToSend = {
         ...contactInfo,
-        _subject: `New Lead from Chatbot: ${contactInfo.name}`,
+        _subject: `New Lead from Chatbot: ${contactInfo.name}`
     };
 
-    // Replace the simulated email with a real HTTP POST request.
     try {
         const response = await fetch(FORMSPREE_ENDPOINT, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                "Content-Type": "application/json",
+                Accept: "application/json"
             },
             body: JSON.stringify(dataToSend)
         });
