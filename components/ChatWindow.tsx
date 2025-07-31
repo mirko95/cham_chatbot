@@ -22,7 +22,7 @@ const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Langu
     <select
       value={language}
       onChange={(e) => setLanguage(e.target.value as Language)}
-      className="bg-primary appearance-none cursor-pointer border border-gray-400 hover:border-white text-white rounded-md py-1 pl-2 pr-7 focus:outline-none focus:ring-1 focus:ring-white text-sm sm:text-base"
+      className="bg-primary cursor-pointer border border-gray-400 hover:border-white text-white rounded-md py-1 pl-2 pr-7 focus:outline-none focus:ring-1 focus:ring-white text-sm sm:text-base"
       aria-label="Select language"
     >
       {supportedLanguages.map(lang => (
@@ -42,18 +42,12 @@ const Header: React.FC<{
   setLanguage: (lang: Language) => void;
   headerTitle: string;
 }> = ({ onClose, logoUrl = "/chameleon-logo.png", language, setLanguage, headerTitle }) => (
-  <div 
-    className="bg-primary px-3 py-2 sm:px-4 sm:py-3 flex justify-between items-center text-white"
-    style={{
-      borderTopLeftRadius: '0.5rem',
-      borderTopRightRadius: '0.5rem'
-    }}
-  >
+  <div className="bg-primary px-3 py-2 sm:px-4 sm:py-3 flex justify-between items-center text-white rounded-t-lg sm:rounded-t-lg">
     <div className="flex items-center space-x-2 sm:space-x-3">
       <img 
         src={logoUrl} 
         alt="Company Logo" 
-        className="w-8 h-8 sm:w-10 sm:h-10 object-contain bg-transparent" 
+        className="w-8 h-8 sm:w-10 sm:h-10 object-contain" 
       />
       <h3 className="font-bold text-sm sm:text-lg">{headerTitle}</h3>
     </div>
@@ -84,7 +78,7 @@ const renderFormattedText = (text: string): JSX.Element => {
 
   const flushList = () => {
     if (listItems.length > 0) {
-      elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-outside pl-4 sm:pl-5 space-y-1 my-1 sm:my-2">{listItems}</ul>);
+      elements.push(<ul key={`ul-${elements.length}`} className="list-disc pl-4 sm:pl-5 space-y-1 my-1 sm:my-2">{listItems}</ul>);
       listItems = [];
     }
   };
@@ -95,7 +89,7 @@ const renderFormattedText = (text: string): JSX.Element => {
     } else {
       flushList();
       if (line.trim() !== '') {
-        elements.push(<p key={index} className="mb-1 sm:mb-2 last:mb-0 text-sm sm:text-base">{parseLine(line)}</p>);
+        elements.push(<p key={index} className="mb-1 sm:mb-2 text-sm sm:text-base">{parseLine(line)}</p>);
       }
     }
   });
@@ -144,9 +138,9 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
           />
           <div className="bg-gray-200 text-gray-800 rounded-xl rounded-bl-none px-3 sm:px-4 py-2 sm:py-3">
             <div className="flex items-center justify-center space-x-1">
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
               <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
+              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
             </div>
           </div>
         </div>
@@ -196,7 +190,7 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   );
 };
 
-// ✅ Chat Window (Responsive + iPhone Safe Fix)
+// ✅ Chat Window (Mobile fullscreen, Desktop floating)
 export const ChatWindow: React.FC<ChatWindowProps> = ({ 
   isOpen, 
   onClose, 
@@ -215,8 +209,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         bg-white transition-all duration-300 ease-in-out origin-bottom-right
         ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
 
-        /* Mobile fullscreen with iOS fix */
-        w-full h-[100dvh] top-0 left-0 rounded-none 
+        /* Mobile fullscreen */
+        w-screen max-w-none h-screen top-0 left-0 rounded-none
         pb-[env(safe-area-inset-bottom)]
 
         /* Desktop floating */
