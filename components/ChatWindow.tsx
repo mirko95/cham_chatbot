@@ -9,7 +9,6 @@ interface ChatWindowProps {
   messages: Message[];
   isLoading: boolean;
   onSubmit: (text: string) => void;
-  logoUrl?: string;
   language: Language;
   setLanguage: (lang: Language) => void;
   headerTitle: string;
@@ -241,7 +240,7 @@ const ChatInput: React.FC<{
   );
 };
 
-// 🪟 Chat Window (Full iOS Optimization)
+// 🪟 Chat Window + Animazione + Click esterno
 export const ChatWindow: React.FC<ChatWindowProps> = ({
   isOpen,
   onClose,
@@ -253,22 +252,44 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   headerTitle,
   inputPlaceholder,
 }) => {
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  // 🔹 Chiudi su click esterno
   useEffect(() => {
-    const adjustForKeyboard = () => {
-      window.scrollTo(0, 0);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        chatRef.current &&
+        !chatRef.current.contains(event.target as Node) &&
+        window.innerWidth > 768
+      ) {
+        onClose();
+      }
     };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
+
+  // 🔹 Fix tastiera iOS
+  useEffect(() => {
+    const adjustForKeyboard = () => window.scrollTo(0, 0);
     window.addEventListener("resize", adjustForKeyboard);
     return () => window.removeEventListener("resize", adjustForKeyboard);
   }, []);
 
   return (
     <div
+      ref={chatRef}
       className={`
         fixed z-50 shadow-2xl flex flex-col overflow-hidden
         bg-white transition-all duration-300 ease-in-out origin-bottom-right
-        ${isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"}
+        transform 
+        ${
+          isOpen
+            ? "opacity-100 translate-y-0 translate-x-0 scale-100"
+            : "opacity-0 translate-y-5 translate-x-2 scale-95 pointer-events-none"
+        }
 
-        /* Mobile fullscreen fix */
+        /* Mobile fullscreen */
         w-screen h-[100dvh] top-0 left-0 rounded-none
         pb-[env(safe-area-inset-bottom)]
 
