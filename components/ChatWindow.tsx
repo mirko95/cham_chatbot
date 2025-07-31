@@ -16,6 +16,7 @@ interface ChatWindowProps {
   inputPlaceholder: string;
 }
 
+// Language selector
 const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Language) => void }> = ({ language, setLanguage }) => (
   <div className="relative">
     <select
@@ -33,6 +34,7 @@ const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Langu
   </div>
 );
 
+// Header (no radius, lets container handle corners)
 const Header: React.FC<{ 
   onClose: () => void; 
   logoUrl?: string;
@@ -40,7 +42,7 @@ const Header: React.FC<{
   setLanguage: (lang: Language) => void;
   headerTitle: string;
 }> = ({ onClose, logoUrl = "/chameleon-logo.png", language, setLanguage, headerTitle }) => (
-  <div className="bg-primary p-4 flex justify-between items-center text-white rounded-t-lg">
+  <div className="bg-primary p-4 flex justify-between items-center text-white">
     <div className="flex items-center space-x-3">
       <img 
         src={logoUrl} 
@@ -58,7 +60,7 @@ const Header: React.FC<{
   </div>
 );
 
-
+// Message text renderer
 const renderFormattedText = (text: string): JSX.Element => {
   const lines = text.split('\n');
   const elements: JSX.Element[] = [];
@@ -71,19 +73,14 @@ const renderFormattedText = (text: string): JSX.Element => {
 
   const flushList = () => {
     if (listItems.length > 0) {
-      elements.push(
-        <ul key={`ul-${elements.length}`} className="list-disc list-outside pl-5 space-y-1 my-2">
-          {listItems}
-        </ul>
-      );
+      elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-outside pl-5 space-y-1 my-2">{listItems}</ul>);
       listItems = [];
     }
   };
 
   lines.forEach((line, index) => {
     if (line.trim().startsWith('* ')) {
-      const content = line.trim().substring(2);
-      listItems.push(<li key={index}>{parseLine(content)}</li>);
+      listItems.push(<li key={index}>{parseLine(line.trim().substring(2))}</li>);
     } else {
       flushList();
       if (line.trim() !== '') {
@@ -93,13 +90,12 @@ const renderFormattedText = (text: string): JSX.Element => {
   });
 
   flushList();
-
   return <>{elements}</>;
 };
 
+// Message list
 const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ messages, isLoading }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -121,11 +117,7 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
               ${msg.sender === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-gray-200 text-gray-800 rounded-bl-none'}
             `}
           >
-            {msg.sender === 'bot' ? (
-              <div className="text-sm">{renderFormattedText(msg.text)}</div>
-            ) : (
-              <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-            )}
+            {msg.sender === 'bot' ? <div className="text-sm">{renderFormattedText(msg.text)}</div> : <p className="text-sm whitespace-pre-wrap">{msg.text}</p>}
           </div>
         </div>
       ))}
@@ -150,14 +142,12 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   );
 };
 
+// Chat input
 const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean; placeholder: string; isOpen: boolean; }> = ({ onSubmit, isLoading, placeholder, isOpen }) => {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
-    if (isOpen && !isLoading) {
-      inputRef.current?.focus();
-    }
+    if (isOpen && !isLoading) inputRef.current?.focus();
   }, [isOpen, isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -179,7 +169,6 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
           placeholder={placeholder}
           className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-focus"
           disabled={isLoading}
-          aria-disabled={isLoading}
         />
         <button
           type="submit"
@@ -193,6 +182,7 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   );
 };
 
+// Chat window
 export const ChatWindow: React.FC<ChatWindowProps> = ({ 
   isOpen, 
   onClose, 
@@ -212,6 +202,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         shadow-2xl 
         rounded-lg 
         flex flex-col
+        overflow-hidden   /* ✅ ensures perfect corners */
         transition-all duration-300 ease-in-out
         origin-bottom-right
         ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
