@@ -2,10 +2,10 @@ import { GoogleGenAI } from "@google/genai";
 import { GEMINI_MODEL } from "../constants";
 import { ContactInfo, Language } from "../types";
 
-// Read API key from environment
+// 🔑 Load API key from Vite environment variables
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-// Debug log (safe: shows first & last 3 characters only)
+// 🐞 Debug log — safe: only shows partial API key (helps confirm env is loaded)
 if (apiKey) {
     console.log(
         `Gemini API Key loaded: ${apiKey.slice(0, 3)}***${apiKey.slice(-3)}`
@@ -16,9 +16,14 @@ if (apiKey) {
     );
 }
 
-// Initialize Gemini AI client
+// 🤖 Initialize Gemini AI client (falls back to placeholder if env key missing)
 const ai = new GoogleGenAI({ apiKey: apiKey || "API_KEY_PLACEHOLDER" });
 
+/** 
+ * Chat message content structure
+ * - `role`: identifies if message is from user or model
+ * - `parts`: contains text chunks
+ */
 interface Part {
     text: string;
 }
@@ -27,6 +32,19 @@ export interface Content {
     parts: Part[];
 }
 
+/**
+ * getAnswer
+ * --------------------
+ * Generates a response from Gemini AI using:
+ * - Conversation history
+ * - Context document
+ * - Specified language
+ * 
+ * Rules in `systemInstruction` enforce:
+ * - Responses in the correct language
+ * - Context-based answers only
+ * - Friendly greetings & handling of unsupported questions
+ */
 export const getAnswer = async (
     history: Content[],
     context: string,
@@ -49,12 +67,13 @@ ${context}
 `;
 
     try {
+        // 🔄 Generate AI response with Gemini model
         const response = await ai.models.generateContent({
             model: GEMINI_MODEL,
             contents: history,
             config: {
                 systemInstruction: systemInstruction,
-                thinkingConfig: { thinkingBudget: 0 }
+                thinkingConfig: { thinkingBudget: 0 } // Explicitly disables extended reasoning
             }
         });
 
@@ -65,21 +84,29 @@ ${context}
     }
 };
 
+/**
+ * sendContactEmail
+ * --------------------
+ * Sends contact form data to Formspree endpoint.
+ * 
+ * Steps to use:
+ * 1. Create a form at https://formspree.io/
+ * 2. Replace `FORMSPREE_ENDPOINT` with your form's unique URL.
+ * 3. Form will forward chatbot leads to configured email.
+ */
 export const sendContactEmail = async (
     contactInfo: ContactInfo
 ): Promise<boolean> => {
-    // IMPORTANT: To make this work, you need to replace the placeholder URL below.
-    // 1. Go to https://formspree.io/ and create a new form.
-    // 2. You will be given an endpoint URL.
-    // 3. Replace 'YOUR_FORM_ID_HERE' with your actual form ID.
-    const FORMSPREE_ENDPOINT = "https://formspree.io/f/movllwqp";
+    const FORMSPREE_ENDPOINT = "https://formspree.io/f/movllwqp"; // 🔄 Replace with your form endpoint
 
+    // Construct payload with extra subject line
     const dataToSend = {
         ...contactInfo,
         _subject: `New Lead from Chatbot: ${contactInfo.name}`
     };
 
     try {
+        // 📤 Send form data via POST
         const response = await fetch(FORMSPREE_ENDPOINT, {
             method: "POST",
             headers: {
@@ -93,6 +120,7 @@ export const sendContactEmail = async (
             console.log("Contact form submitted successfully.");
             return true;
         } else {
+            // Log detailed Formspree error response
             const errorData = await response.json();
             console.error("Failed to send contact form:", errorData);
             return false;

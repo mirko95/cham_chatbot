@@ -1,21 +1,60 @@
+/**
+ * PDF_CONTENT
+ * --------------------------
+ * - Static FAQ content used as the "knowledge base" for the chatbot.
+ * - This acts as the CONTEXT section for Gemini (RAG simulation).
+ * - Each Q&A entry is simple text to make parsing predictable.
+ * - The chatbot will answer user questions by referencing ONLY this content.
+ *
+ * ⚠️ NOTE:
+ * - For large or dynamic sites, this static content could be replaced by 
+ *   a real RAG pipeline (embedding + vector search).
+ * - For multilingual support, consider storing a version of this per language.
+ */
+
 export const PDF_CONTENT = `
-1. What services do you offer? We provide end-to-end AI solutions including chatbots, predictive analytics, process automation, computer vision, and custom machine learning models tailored to your business needs.
+1. What is Chameleon AI and who is it for?  
+Chameleon AI is a flexible, website-aware AI assistant designed for small and medium-sized businesses. It automates customer interactions, answers questions, collects leads, integrates with existing systems, and adapts to your brand’s tone and language. It’s especially powerful for hospitality, retail, finance, and service-based industries.
 
-2. How can AI benefit my company? AI can streamline operations, reduce costs, enhance customer experience, automate repetitive tasks, improve decision-making through data analysis, and open new revenue opportunities.
+2. How does Chameleon AI integrate with my business tools?  
+Integration is fast and code-free. Chameleon connects directly to your website, CRM, booking engines, Property Management Systems (PMS), POS, and email platforms. Custom API integrations are also available for unique workflows.
 
-3. Do you offer custom AI development? Yes. We specialize in building AI solutions tailored to specific industries such as hospitality, finance, retail, healthcare, and more.
+3. Can I customize my AI assistant?  
+Absolutely. You can adjust tone, style, and personality; create industry-specific FAQs and workflows; configure multilingual responses; and match visuals (logo, colors, fonts) to your brand. This ensures the assistant feels like part of your team.
 
-4. Is your AI GDPR-compliant? Absolutely. All our AI solutions are designed with GDPR and other relevant data protection regulations in mind. We ensure secure data handling, anonymization, and compliance.
+4. How much does Chameleon AI cost?  
+Chameleon offers three plans:  
+- Starter – Free: Basic assistant and website embed  
+- Pro – $129/month: Advanced features, integrations, and automation  
+- Enterprise – Custom pricing for multi-property businesses or complex workflows  
+Pricing scales with your needs — no hidden fees.
 
-5. Can AI integrate with my existing systems? Yes. Our AI solutions are designed to seamlessly integrate with existing CRMs, ERPs, websites, and other enterprise tools through APIs and custom connectors.
+5. How quickly can I get started?  
+A standard setup can be live in under 30 minutes. Enterprise and complex integrations may take a few days to configure.
 
-6. How much does it cost to implement AI? Costs vary depending on the scope, complexity, and customization required. We offer flexible pricing models including subscriptions, one-time development fees, and pay-per-use options.
+6. How secure is Chameleon AI?  
+Security is a top priority. We use end-to-end encryption, GDPR-compliant processes, access controls, and anonymization to keep your data safe.
 
-7. Do you provide ongoing support? Yes. We offer continuous maintenance, updates, and support packages to ensure your AI solutions stay efficient, secure, and up-to-date.
+7. What support do you provide?  
+Support depends on your plan:  
+- Starter – Community forums and documentation  
+- Pro – Priority email support  
+- Enterprise – Dedicated Success Manager and 24/7 premium support
 
-8. What industries can benefit the most? Any industry can benefit, but we have specialized experience in hospitality, e-commerce, finance, healthcare, manufacturing, and customer service sectors.
+8. What kind of ROI can I expect?  
+Our clients have reported:  
+- +28% guest satisfaction from AI reception & instant responses  
+- Reduced reporting time by 60% with automated reporting  
+- +15% direct bookings from personalized guest engagement  
+- +12% ancillary revenue from targeted upselling
 
-9. How quickly can AI be implemented? Depending on complexity, a standard chatbot can be deployed within a few days, while more complex custom AI solutions may take weeks to months.
+9. Which industries benefit most from Chameleon AI?  
+Chameleon works across industries but excels in:  
+- Hospitality – Hotels, resorts, B&Bs  
+- Retail & E-commerce – Customer service & recommendations  
+- Finance – Client onboarding & support  
+- Healthcare – Appointment scheduling & FAQ automation
 
-10. How do I get started? Contact us for a free consultation. We'll analyze your needs, suggest the best AI solutions, and create a roadmap for implementation.
+10. How do I get started?  
+Click “Get in Touch” or choose a plan in our Pricing section. We’ll help set up, customize your AI assistant, and integrate it into your workflow.
 `;

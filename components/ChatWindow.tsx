@@ -3,20 +3,27 @@ import { JSX } from 'react';
 import { Message, Language } from '../types';
 import { supportedLanguages } from '../constants';
 
+/**
+ * Props for ChatWindow component
+ * - Manages open/close state, messages, input behavior, and language selection
+ */
 interface ChatWindowProps {
-  isOpen: boolean;
-  onClose: () => void;
-  messages: Message[];
-  isLoading: boolean;
-  onSubmit: (text: string) => void;
-  logoUrl?: string;
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  headerTitle: string;
-  inputPlaceholder: string;
+  isOpen: boolean;                          // Controls visibility of chat window
+  onClose: () => void;                      // Handler to close chat window
+  messages: Message[];                      // List of messages displayed in conversation
+  isLoading: boolean;                       // Whether the bot is currently "typing"
+  onSubmit: (text: string) => void;         // Callback when user submits a message
+  logoUrl?: string;                         // Optional custom logo (defaults to Chameleon)
+  language: Language;                       // Current UI language
+  setLanguage: (lang: Language) => void;    // Updates language selection
+  headerTitle: string;                      // Chat header title (e.g., bot or company name)
+  inputPlaceholder: string;                 // Placeholder text for input field
 }
 
-// ✅ Language Selector
+/** -------------------------
+ * Language Selector Component
+ * - Dropdown to choose supported chat languages
+ ------------------------- */
 const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Language) => void }> = ({ language, setLanguage }) => (
   <div className="relative">
     <select
@@ -34,7 +41,10 @@ const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Langu
   </div>
 );
 
-// ✅ Header
+/** -------------------------
+ * Header Component
+ * - Displays chat logo, title, language selector, and close button
+ ------------------------- */
 const Header: React.FC<{ 
   onClose: () => void; 
   logoUrl?: string;
@@ -56,6 +66,7 @@ const Header: React.FC<{
       <button 
         onClick={onClose} 
         className="text-white hover:text-gray-200 font-bold text-lg sm:text-xl"
+        aria-label="Close chat"
       >
         ×
       </button>
@@ -63,12 +74,17 @@ const Header: React.FC<{
   </div>
 );
 
-// ✅ Render formatted bot text
+/** -------------------------
+ * renderFormattedText
+ * - Parses bot messages for Markdown-style bold and bullet lists
+ * - Supports multi-line formatting and proper HTML rendering
+ ------------------------- */
 const renderFormattedText = (text: string): JSX.Element => {
   const lines = text.split('\n');
   const elements: JSX.Element[] = [];
   let listItems: JSX.Element[] = [];
 
+  // Parse text for bold syntax (**bold**)
   const parseLine = (line: string) =>
     line.split(/(\*\*.*?\*\*)/g).map((part, i) =>
       part.startsWith('**') && part.endsWith('**') 
@@ -76,6 +92,7 @@ const renderFormattedText = (text: string): JSX.Element => {
         : part
     );
 
+  // Flush accumulated list items into a <ul>
   const flushList = () => {
     if (listItems.length > 0) {
       elements.push(<ul key={`ul-${elements.length}`} className="list-disc pl-4 sm:pl-5 space-y-1 my-1 sm:my-2">{listItems}</ul>);
@@ -83,12 +100,15 @@ const renderFormattedText = (text: string): JSX.Element => {
     }
   };
 
+  // Loop through lines to detect lists vs paragraphs
   lines.forEach((line, index) => {
     if (line.trim().startsWith('* ')) {
+      // Collect bullet point
       listItems.push(<li key={index}>{parseLine(line.trim().substring(2))}</li>);
     } else {
       flushList();
       if (line.trim() !== '') {
+        // Normal paragraph
         elements.push(<p key={index} className="mb-1 sm:mb-2 text-sm sm:text-base">{parseLine(line)}</p>);
       }
     }
@@ -98,9 +118,15 @@ const renderFormattedText = (text: string): JSX.Element => {
   return <>{elements}</>;
 };
 
-// ✅ Message List
+/** -------------------------
+ * MessageList Component
+ * - Displays user & bot messages in a scrollable chat area
+ * - Auto-scrolls to the latest message
+ ------------------------- */
 const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ messages, isLoading }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages or typing indicator changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
@@ -129,6 +155,8 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
           </div>
         </div>
       ))}
+
+      {/* Typing indicator when bot is generating a response */}
       {isLoading && (
         <div className="flex items-end gap-2 justify-start">
           <img 
@@ -150,10 +178,16 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   );
 };
 
-// ✅ Chat Input
+/** -------------------------
+ * ChatInput Component
+ * - Text input for user messages with send button
+ * - Auto-focuses when chat opens and bot is not loading
+ ------------------------- */
 const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean; placeholder: string; isOpen: boolean; }> = ({ onSubmit, isLoading, placeholder, isOpen }) => {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && !isLoading) inputRef.current?.focus();
   }, [isOpen, isLoading]);
@@ -190,7 +224,11 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   );
 };
 
-// ✅ Chat Window (Mobile fullscreen, Desktop floating)
+/** -------------------------
+ * ChatWindow Component
+ * - Container for entire chat interface
+ * - Adapts layout for mobile (fullscreen) and desktop (floating)
+ ------------------------- */
 export const ChatWindow: React.FC<ChatWindowProps> = ({ 
   isOpen, 
   onClose, 
@@ -209,11 +247,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         bg-white transition-all duration-300 ease-in-out origin-bottom-right
         ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
 
-        /* Mobile fullscreen */
+        /* Mobile fullscreen layout */
         w-screen max-w-none h-screen top-0 left-0 rounded-none
         pb-[env(safe-area-inset-bottom)]
 
-        /* Desktop floating */
+        /* Desktop floating layout */
         sm:bottom-5 sm:right-5 sm:top-auto sm:left-auto
         sm:w-[90vw] sm:max-w-md sm:h-[75vh] sm:max-h-[600px] sm:rounded-lg
       `}

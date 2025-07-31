@@ -6,9 +6,15 @@ import { Message, ChatState, ContactInfo, Language, Theme } from './types';
 import { DEFAULT_LOGO, DEFAULT_PRIMARY_COLOR, DEFAULT_PRIMARY_FOCUS_COLOR, supportedLanguages, translations, DEFAULT_BORDER_RADIUS, DEFAULT_FONT_FAMILY } from './constants';
 import { PDF_CONTENT } from './pdfContent';
 
-// Detect initial language
+/**
+ * getInitialLanguage
+ * -------------------------
+ * Detects initial chat language:
+ * 1️⃣ Attempts to read <html lang> from parent document (if same-origin)
+ * 2️⃣ Falls back to browser language
+ * 3️⃣ Defaults to English ('en')
+ */
 const getInitialLanguage = (): Language => {
-  // 1️⃣ Try same-origin <html lang>
   try {
     const docLang = window.parent.document.documentElement.lang.split(/[-_]/)[0];
     if (supportedLanguages.includes(docLang as Language)) {
@@ -18,7 +24,6 @@ const getInitialLanguage = (): Language => {
     console.info("Same-origin lang access failed, likely cross-origin iframe.");
   }
 
-  // 2️⃣ Fallback to browser language
   if (navigator.language) {
     const browserLang = navigator.language.split(/[-_]/)[0];
     if (supportedLanguages.includes(browserLang as Language)) {
@@ -26,19 +31,22 @@ const getInitialLanguage = (): Language => {
     }
   }
 
-  // 3️⃣ Default to English
   return 'en';
 };
 
 const App: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [chatState, setChatState] = useState<ChatState>('querying');
-  const [contactInfo, setContactInfo] = useState<Partial<ContactInfo>>({});
-  const [isAwaitingContactConfirmation, setIsAwaitingContactConfirmation] = useState(false);
+  /** -------------------------
+   * State Management
+   ------------------------- */
+  const [isOpen, setIsOpen] = useState(false);                       // Controls chat open/close
+  const [language, setLanguage] = useState<Language>(getInitialLanguage); // Active chat language
+  const [messages, setMessages] = useState<Message[]>([]);           // Chat conversation history
+  const [isLoading, setIsLoading] = useState(false);                 // Bot "typing" indicator
+  const [chatState, setChatState] = useState<ChatState>('querying'); // Current chat workflow state
+  const [contactInfo, setContactInfo] = useState<Partial<ContactInfo>>({}); // Temporary contact form data
+  const [isAwaitingContactConfirmation, setIsAwaitingContactConfirmation] = useState(false); // Whether user is deciding to start contact form
 
+  // Theme customization (dynamic from parent site)
   const [theme, setTheme] = useState<Theme>({
     primaryColor: DEFAULT_PRIMARY_COLOR,
     primaryFocusColor: DEFAULT_PRIMARY_FOCUS_COLOR,
@@ -47,7 +55,10 @@ const App: React.FC = () => {
     fontFamily: DEFAULT_FONT_FAMILY,
   });
 
-  // 🔹 Listen for theme changes via postMessage
+  /** -------------------------
+   * Theme & Language Sync via postMessage
+   * - Listens for theme changes or language updates from parent website
+   ------------------------- */
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'CHAMELEON_THEME' && typeof event.data.theme === 'object') {
@@ -61,11 +72,14 @@ const App: React.FC = () => {
       }
     };
     window.addEventListener('message', handleMessage);
-    window.parent.postMessage({ type: 'CHAMELEON_READY' }, '*');
+    window.parent.postMessage({ type: 'CHAMELEON_READY' }, '*'); // Notify parent frame that chatbot is ready
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // 🔹 Try to observe <html lang> if same-origin
+  /** -------------------------
+   * Same-Origin <html lang> Observer
+   * - Updates language if parent document <html lang> changes dynamically
+   ------------------------- */
   useEffect(() => {
     let observer: MutationObserver;
     try {
@@ -87,7 +101,10 @@ const App: React.FC = () => {
     return () => observer?.disconnect();
   }, []);
 
-  // 🔹 Apply theme styles
+  /** -------------------------
+   * Apply Dynamic Theme Styles
+   * - Updates CSS variables for primary color, focus color, font, and border radius
+   ------------------------- */
   useEffect(() => {
     const rootStyle = document.documentElement.style;
     rootStyle.setProperty('--primary-color', theme.primaryColor);
@@ -108,15 +125,27 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  // 🔹 Reset greeting when language changes
+  /** -------------------------
+   * Reset Greeting Message when Language Changes
+   * - Displays initial bot greeting in the new language
+   ------------------------- */
   useEffect(() => {
     setMessages([{ id: Date.now(), text: translations[language].greeting, sender: 'bot' }]);
   }, [language]);
 
+  /** -------------------------
+   * Helper: Add Message to Chat
+   ------------------------- */
   const addMessage = useCallback((text: string, sender: 'user' | 'bot') => {
     setMessages(prev => [...prev, { id: Date.now() + Math.random(), text, sender }]);
   }, []);
 
+  /** -------------------------
+   * handleContactFlow
+   * - Guides user through multi-step contact info collection
+   * - Validates email format
+   * - Submits collected contact info via sendContactEmail()
+   ------------------------- */
   const handleContactFlow = useCallback(async (userInput: string) => {
     setIsLoading(true);
     let nextState: ChatState = chatState;
@@ -138,7 +167,7 @@ const App: React.FC = () => {
           break;
         case 'collecting_email':
           if (!/\S+@\S+\.\S+/.test(userInput)) {
-            botResponse = t.contactEmailInvalid;
+            botResponse = t.contactEmailInvalid; // Invalid email
           } else {
             setContactInfo(prev => ({ ...prev, email: userInput }));
             nextState = 'collecting_phone';
@@ -164,11 +193,19 @@ const App: React.FC = () => {
     }
   }, [addMessage, chatState, contactInfo, language]);
 
+  /** -------------------------
+   * handleSubmit
+   * - Processes user input:
+   *   1. Handles contact confirmation flow
+   *   2. Triggers contact form flow if keyword detected
+   *   3. Sends query to Gemini AI if normal question
+   ------------------------- */
   const handleSubmit = useCallback(async (userInput: string) => {
     if (!userInput.trim()) return;
     addMessage(userInput, 'user');
     const t = translations[language];
 
+    // Handle contact confirmation (Yes/No)
     if (isAwaitingContactConfirmation) {
       const isYes = t.affirmativeResponses.split(', ').some(resp => userInput.toLowerCase().includes(resp));
       setIsAwaitingContactConfirmation(false);
@@ -181,11 +218,13 @@ const App: React.FC = () => {
       }
     }
 
+    // If in contact collection flow
     if (chatState !== 'querying') {
       handleContactFlow(userInput);
       return;
     }
 
+    // Detect contact triggers (e.g., "talk to sales")
     const triggers = t.contactTriggers.split(', ');
     if (triggers.some(trigger => userInput.toLowerCase().includes(trigger))) {
       setIsLoading(true);
@@ -195,10 +234,11 @@ const App: React.FC = () => {
       return;
     }
 
+    // Standard Q&A flow → send question to Gemini
     setIsLoading(true);
     try {
       const history = [
-        ...messages.slice(1),
+        ...messages.slice(1), // Exclude initial greeting
         { text: userInput, sender: 'user' as const, id: 0 }
       ].map(msg => ({
         role: msg.sender === 'bot' ? 'model' : 'user' as 'user' | 'model',
@@ -216,6 +256,9 @@ const App: React.FC = () => {
     }
   }, [addMessage, chatState, handleContactFlow, messages, isAwaitingContactConfirmation, language]);
 
+  /** -------------------------
+   * Render Chat UI
+   ------------------------- */
   return (
     <div className="fixed bottom-5 right-5 flex flex-col items-end z-50">
       <ChatWindow
