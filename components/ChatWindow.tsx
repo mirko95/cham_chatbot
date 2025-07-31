@@ -16,7 +16,7 @@ interface ChatWindowProps {
   inputPlaceholder: string;
 }
 
-// Language Selector
+// ✅ Language Selector
 const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Language) => void }> = ({ language, setLanguage }) => (
   <div className="relative">
     <select
@@ -34,7 +34,7 @@ const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Langu
   </div>
 );
 
-// Header
+// ✅ Header
 const Header: React.FC<{ 
   onClose: () => void; 
   logoUrl?: string;
@@ -69,7 +69,7 @@ const Header: React.FC<{
   </div>
 );
 
-// Render formatted bot text
+// ✅ Render formatted bot text
 const renderFormattedText = (text: string): JSX.Element => {
   const lines = text.split('\n');
   const elements: JSX.Element[] = [];
@@ -104,7 +104,7 @@ const renderFormattedText = (text: string): JSX.Element => {
   return <>{elements}</>;
 };
 
-// Message List
+// ✅ Message List
 const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ messages, isLoading }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -156,7 +156,7 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   );
 };
 
-// Chat Input
+// ✅ Chat Input
 const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean; placeholder: string; isOpen: boolean; }> = ({ onSubmit, isLoading, placeholder, isOpen }) => {
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -196,7 +196,7 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   );
 };
 
-// Chat Window (Responsive + Fullscreen on Mobile)
+// ✅ Chat Window (Responsive + iPhone Safe Fix)
 export const ChatWindow: React.FC<ChatWindowProps> = ({ 
   isOpen, 
   onClose, 
@@ -212,11 +212,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     <div
       className={`
         fixed z-50 shadow-2xl flex flex-col overflow-hidden 
-        bg-white transition-all duration-300 ease-in-out origin-bottom-right 
+        bg-white transition-all duration-300 ease-in-out origin-bottom-right
         ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
 
-        /* Mobile fullscreen */
-        w-full h-full top-0 left-0 rounded-none
+        /* Mobile fullscreen with iOS fix */
+        w-full h-[100dvh] top-0 left-0 rounded-none 
+        pb-[env(safe-area-inset-bottom)]
 
         /* Desktop floating */
         sm:bottom-5 sm:right-5 sm:top-auto sm:left-auto
