@@ -152,9 +152,10 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen && !isLoading) inputRef.current?.focus();
-  }, [isOpen, isLoading]);
+  // 🔹 Rimosso auto-focus all'apertura
+  const handleFocus = () => {
+    if (!isLoading) inputRef.current?.focus();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,10 +166,11 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   };
 
   return (
-    <div className="border-t border-gray-200 px-2 sm:px-3 py-2 bg-white rounded-b-lg">
+    <div className="border-t border-gray-200 px-2 sm:px-3 py-2 bg-white rounded-b-lg fixed bottom-0 w-full sm:static">
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <input
           ref={inputRef}
+          onClick={handleFocus}
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -189,7 +191,7 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   );
 };
 
-/* 🪟 Chat Window + Click Outside + Iframe Message Listener */
+/* 🪟 Chat Window */
 export const ChatWindow: React.FC<ChatWindowProps> = ({
   isOpen,
   onClose,
@@ -214,7 +216,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  /* 🔹 Listen for close from parent iframe */
+  /* 🔹 Iframe message listener */
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "CHAMELEON_CLOSE") onClose();
@@ -223,17 +225,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [onClose]);
 
-  /* 🔹 Fix iOS keyboard resize */
-  useEffect(() => {
-    const adjustForKeyboard = () => window.scrollTo(0, 0);
-    window.addEventListener("resize", adjustForKeyboard);
-    return () => window.removeEventListener("resize", adjustForKeyboard);
-  }, []);
-
   return (
     <div
       ref={chatRef}
-      className={`fixed z-50 shadow-2xl flex flex-col overflow-hidden bg-white transition-all duration-300 ease-in-out origin-bottom-right transform 
+      className={`fixed z-50 shadow-2xl flex flex-col overflow-hidden bg-white transition-all duration-200 ease-in-out origin-bottom-right transform 
         ${isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}
         w-screen h-[100dvh] top-0 left-0 rounded-none pb-[env(safe-area-inset-bottom)]
         sm:bottom-5 sm:right-5 sm:w-[90vw] sm:max-w-md sm:h-[75vh] sm:max-h-[600px] sm:rounded-lg`}
