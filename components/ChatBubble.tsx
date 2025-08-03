@@ -18,11 +18,11 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClick, isOpen }) => {
         cursor-pointer
         flex items-center justify-center
         transition-all duration-200 ease-in-out
-        transform ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}
+        ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100 pointer-events-auto'}
 
         fixed 
-        bottom-[calc(4rem+env(safe-area-inset-bottom))] right-4  /* 🔹 Mobile: raised above nav bar */
-        sm:bottom-6 sm:right-6                                    /* 🔹 Desktop: normal position */
+        bottom-[max(1rem,calc(4rem+env(safe-area-inset-bottom)))] right-4
+        sm:bottom-6 sm:right-6
       `}
       style={{
         zIndex: 1000, // Always on top
@@ -32,10 +32,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ onClick, isOpen }) => {
       <img
         src="/chameleon-logo.png"
         alt="Chat Icon"
-        className="
-          w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10
-          object-contain
-        "
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://via.placeholder.com/40"; }}
+        className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 object-contain"
       />
     </button>
   );
