@@ -204,6 +204,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
 
+  /* 🔹 Notify iframe about open/close */
+  useEffect(() => {
+    const iframe = window.parent;
+    if (isOpen) {
+      iframe.postMessage({ type: "CHAMELEON_OPEN" }, "*");
+    } else {
+      iframe.postMessage({ type: "CHAMELEON_CLOSE" }, "*");
+    }
+  }, [isOpen]);
+
   /* 🔹 Close on click outside (desktop only) */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
