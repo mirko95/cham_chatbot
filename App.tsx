@@ -70,19 +70,11 @@ const App: React.FC = () => {
           setLanguage(newLang as Language);
         }
       }
-      if (event.data?.type === 'CHAMELEON_OPEN') {
-        setIsOpen(true); // 🔹 Apertura da comando esterno
-      }
-      if (event.data?.type === 'CHAMELEON_CLOSE') {
-        setIsOpen(false); // 🔹 Chiusura da comando esterno
-      }
     };
-
-  window.addEventListener('message', handleMessage);
-  window.parent.postMessage({ type: 'CHAMELEON_READY' }, '*');
-  return () => window.removeEventListener('message', handleMessage);
-}, []);
-
+    window.addEventListener('message', handleMessage);
+    window.parent.postMessage({ type: 'CHAMELEON_READY' }, '*'); // Notify parent frame that chatbot is ready
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   /** -------------------------
    * Same-Origin <html lang> Observer

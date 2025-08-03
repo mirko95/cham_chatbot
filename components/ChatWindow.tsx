@@ -21,10 +21,11 @@ const LanguageSelector: React.FC<{ language: Language; setLanguage: (lang: Langu
     <select
       value={language}
       onChange={(e) => setLanguage(e.target.value as Language)}
-      className="bg-primary border border-gray-400 cursor-pointer text-white rounded-lg py-1 pl-2 pr-7 text-sm sm:text-base focus:outline-none focus:ring-1 focus:ring-white"
+      className="bg-primary cursor-pointer border border-gray-400 hover:border-white text-white rounded-md py-1 pl-2 pr-7 focus:outline-none focus:ring-1 focus:ring-white text-sm sm:text-base"
+      aria-label="Select language"
     >
       {supportedLanguages.map((lang) => (
-        <option key={lang} value={lang} className="bg-gray-900 text-white">
+        <option key={lang} value={lang} className="bg-gray-800 font-semibold text-white">
           {lang.toUpperCase()}
         </option>
       ))}
@@ -40,14 +41,14 @@ const Header: React.FC<{ onClose: () => void; logoUrl?: string; language: Langua
   setLanguage,
   headerTitle,
 }) => (
-  <div className="bg-primary px-3 py-3 flex justify-between items-center text-white rounded-t-2xl shadow-lg">
-    <div className="flex items-center space-x-3">
+  <div className="bg-primary px-3 py-2 sm:px-4 sm:py-3 flex justify-between items-center text-white rounded-t-lg sm:rounded-t-lg">
+    <div className="flex items-center space-x-2 sm:space-x-3">
       <img src={logoUrl} alt="Company Logo" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
-      <h3 className="font-bold text-lg">{headerTitle}</h3>
+      <h3 className="font-bold text-sm sm:text-lg">{headerTitle}</h3>
     </div>
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-2 sm:space-x-3">
       <LanguageSelector language={language} setLanguage={setLanguage} />
-      <button onClick={onClose} className="text-white text-xl font-bold hover:text-gray-200" aria-label="Close chat">
+      <button onClick={onClose} className="text-white hover:text-gray-200 font-bold text-lg sm:text-xl" aria-label="Close chat">
         ×
       </button>
     </div>
@@ -70,7 +71,7 @@ const renderFormattedText = (text: string): JSX.Element => {
   const flushList = () => {
     if (listItems.length > 0) {
       elements.push(
-        <ul key={`ul-${elements.length}`} className="list-disc pl-5 space-y-1 my-2">
+        <ul key={`ul-${elements.length}`} className="list-disc pl-4 sm:pl-5 space-y-1 my-1 sm:my-2">
           {listItems}
         </ul>
       );
@@ -84,7 +85,11 @@ const renderFormattedText = (text: string): JSX.Element => {
     } else {
       flushList();
       if (line.trim() !== "") {
-        elements.push(<p key={index} className="mb-2 text-sm sm:text-base">{parseLine(line)}</p>);
+        elements.push(
+          <p key={index} className="mb-1 sm:mb-2 text-sm sm:text-base">
+            {parseLine(line)}
+          </p>
+        );
       }
     }
   });
@@ -102,32 +107,32 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overscroll-contain">
+    <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3 overflow-y-auto touch-pan-y overscroll-contain">
       {messages.map((msg) => (
         <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
           {msg.sender === "bot" && (
-            <img src="/chameleon-logo.png" alt="Bot Avatar" className="w-6 h-6 object-contain rounded-full bg-white border border-gray-300" />
+            <img src="/chameleon-logo.png" alt="Bot Avatar" className="w-5 h-5 sm:w-6 sm:h-6 object-contain rounded-full bg-white p-0.5 border border-gray-300 flex-shrink-0" />
           )}
           <div
-            className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md text-sm sm:text-base ${
+            className={`max-w-[75%] sm:max-w-xs md:max-w-md lg:max-w-lg px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base ${
               msg.sender === "user"
-                ? "bg-gradient-to-r from-primary to-primary-focus text-white rounded-br-none"
-                : "bg-white text-gray-800 rounded-bl-none"
+                ? "bg-primary text-white rounded-br-none"
+                : "bg-gray-200 text-gray-800 rounded-bl-none"
             }`}
           >
-            {msg.sender === "bot" ? renderFormattedText(msg.text) : <p className="whitespace-pre-wrap">{msg.text}</p>}
+            {msg.sender === "bot" ? <div>{renderFormattedText(msg.text)}</div> : <p className="whitespace-pre-wrap">{msg.text}</p>}
           </div>
         </div>
       ))}
 
       {isLoading && (
         <div className="flex items-end gap-2 justify-start">
-          <img src="/chameleon-logo.png" alt="Bot Avatar" className="w-6 h-6 object-contain rounded-full bg-white border border-gray-300" />
-          <div className="bg-white text-gray-800 rounded-2xl px-4 py-2 shadow-md">
-            <div className="flex space-x-1">
+          <img src="/chameleon-logo.png" alt="Bot Avatar" className="w-5 h-5 sm:w-6 sm:h-6 object-contain rounded-full bg-white p-0.5 border border-gray-300 flex-shrink-0" />
+          <div className="bg-gray-200 text-gray-800 rounded-xl rounded-bl-none px-3 sm:px-4 py-2 sm:py-3">
+            <div className="flex items-center justify-center space-x-1">
               <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
+              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
             </div>
           </div>
         </div>
@@ -142,9 +147,14 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   onSubmit,
   isLoading,
   placeholder,
+  isOpen,
 }) => {
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFocus = () => {
+    if (!isLoading) inputRef.current?.focus();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,22 +165,23 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   };
 
   return (
-    <div className="border-t border-gray-200 px-2 py-2 bg-white rounded-b-2xl shadow-lg">
+    <div className="border-t border-gray-200 px-2 sm:px-3 py-2 bg-white rounded-b-lg fixed bottom-0 w-full sm:static">
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <input
           ref={inputRef}
+          onClick={handleFocus}
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
+          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-focus text-base"
           style={{ fontSize: "16px" }}
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary-focus disabled:bg-gray-400 text-base"
+          className="bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary-focus disabled:bg-gray-400 disabled:cursor-not-allowed text-base"
         >
           ➤
         </button>
@@ -193,11 +204,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
 
+  /* 🔹 Notify iframe about open/close */
   useEffect(() => {
     const iframe = window.parent;
-    iframe.postMessage({ type: isOpen ? "CHAMELEON_OPEN" : "CHAMELEON_CLOSE" }, "*");
+    if (isOpen) {
+      iframe.postMessage({ type: "CHAMELEON_OPEN" }, "*");
+    } else {
+      iframe.postMessage({ type: "CHAMELEON_CLOSE" }, "*");
+    }
   }, [isOpen]);
 
+  /* 🔹 Close on click outside (desktop only) */
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatRef.current && !chatRef.current.contains(event.target as Node) && window.innerWidth > 768) {
+        onClose();
+      }
+    };
+    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen, onClose]);
+
+  /* 🔹 Iframe message listener */
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "CHAMELEON_CLOSE") onClose();
@@ -206,20 +234,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [onClose]);
 
+  /* 🔹 Prevent background scroll on mobile when open */
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   return (
     <div
       ref={chatRef}
-      className={`fixed z-50 flex flex-col bg-white shadow-2xl transition-transform duration-300 ease-out
-        ${isOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}
-        w-screen h-screen sm:bottom-5 sm:right-5 sm:w-[400px] sm:h-[600px] sm:rounded-2xl`}
+      className={`fixed z-50 shadow-2xl flex flex-col overflow-hidden bg-white transition-all duration-200 ease-in-out origin-bottom-right transform 
+        ${isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}
+        w-screen h-[100dvh] top-0 left-0 rounded-none pb-[env(safe-area-inset-bottom)]
+        sm:bottom-5 sm:right-5 sm:w-[90vw] sm:max-w-md sm:h-[75vh] sm:max-h-[600px] sm:rounded-lg`}
     >
       <Header onClose={onClose} language={language} setLanguage={setLanguage} headerTitle={headerTitle} />
-      <div className="flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: "#71bfad" }}>
+      <div className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: "#71bfad" }}>
         <MessageList messages={messages} isLoading={isLoading} />
       </div>
       <ChatInput onSubmit={onSubmit} isLoading={isLoading} placeholder={inputPlaceholder} isOpen={isOpen} />
