@@ -107,7 +107,7 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3 overflow-y-auto">
+    <div className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-3 overflow-y-auto touch-pan-y overscroll-contain">
       {messages.map((msg) => (
         <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
           {msg.sender === "bot" && (
@@ -152,7 +152,6 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 🔹 Rimosso auto-focus all'apertura
   const handleFocus = () => {
     if (!isLoading) inputRef.current?.focus();
   };
@@ -224,6 +223,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [onClose]);
+
+  /* 🔹 Prevent background scroll on mobile when open */
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   return (
     <div
