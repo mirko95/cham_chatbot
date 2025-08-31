@@ -175,7 +175,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
 
+  // >>> Added unified STATE message, kept your OPEN/CLOSE
   useEffect(() => {
+    window.parent.postMessage({ type: "CHAMELEON_STATE", open: isOpen }, "*");
     window.parent.postMessage({ type: isOpen ? "CHAMELEON_OPEN" : "CHAMELEON_CLOSE" }, "*");
   }, [isOpen]);
 
@@ -189,13 +191,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
+  // >>> Extended to optionally handle CHAMELEON_LANGUAGE (kept your CLOSE)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "CHAMELEON_CLOSE") onClose();
+      if (event.data?.type === "CHAMELEON_LANGUAGE" && event.data.lang) {
+        const newLang = event.data.lang as Language;
+        if (newLang !== language) setLanguage(newLang);
+      }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [onClose]);
+  }, [onClose, language, setLanguage]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
