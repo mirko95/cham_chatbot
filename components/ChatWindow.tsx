@@ -136,8 +136,17 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
     if (text.trim() && !isLoading) {
       onSubmit(text);
       setText("");
+      // 🔥 Dopo invio, ridai il focus all'input
+      inputRef.current?.focus();
     }
   };
+
+  // 🔥 Quando apri la chat, focus automatico
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [isOpen]);
 
   return (
     <div className="border-t border-gray-200 px-2 sm:px-3 py-2 bg-white rounded-b-lg">
@@ -156,7 +165,9 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
           type="submit"
           disabled={isLoading}
           className="bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary-focus disabled:bg-gray-400"
-        >➤</button>
+        >
+          ➤
+        </button>
       </form>
     </div>
   );
