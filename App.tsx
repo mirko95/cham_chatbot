@@ -260,7 +260,8 @@ const App: React.FC = () => {
    * Render Chat UI
    ------------------------- */
   return (
-    <div className="fixed bottom-5 right-5 flex flex-col items-end z-50">
+    // Updated wrapper: fills the iframe and anchors content bottom-right
+    <div className="fixed inset-0 flex items-end justify-end z-50 p-0">
       <ChatWindow
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
@@ -272,7 +273,10 @@ const App: React.FC = () => {
         headerTitle={translations[language].headerTitle}
         inputPlaceholder={translations[language].inputPlaceholder}
       />
-      <ChatBubble isOpen={isOpen} onClick={() => setIsOpen(true)} />
+      {/* Bubble constrained to the 56px footprint of the closed iframe */}
+      <div className="w-14 h-14 flex items-center justify-center">
+        <ChatBubble isOpen={isOpen} onClick={() => setIsOpen(true)} />
+      </div>
     </div>
   );
 };
