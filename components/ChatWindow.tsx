@@ -122,6 +122,9 @@ const MessageList: React.FC<{ messages: Message[]; isLoading: boolean }> = ({ me
   );
 };
 
+/* =========================
+   ChatInput with robust autofocus
+   ========================= */
 const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean; placeholder: string; isOpen: boolean }> = ({
   onSubmit,
   isLoading,
@@ -131,27 +134,47 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
   const [text, setText] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const focusInput = () => {
+    // attende animazioni/resize dell'iframe
+    requestAnimationFrame(() => {
+      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 80);
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim() && !isLoading) {
       onSubmit(text);
       setText("");
-      // 🔥 Dopo invio, ridai il focus all'input
-      inputRef.current?.focus();
+      // refocus immediato (se non entra in loading)
+      if (!isLoading) focusInput();
     }
   };
 
-  // 🔥 Quando apri la chat, focus automatico
+  // Focus quando la chat si apre
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (isOpen && !isLoading) focusInput();
   }, [isOpen]);
+
+  // Refocus quando finisce il loading
+  useEffect(() => {
+    if (!isLoading && isOpen) focusInput();
+  }, [isLoading]);
+
+  // Focus su richiesta del parent (dopo espansione iframe)
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.type === "CHAMELEON_FOCUS") focusInput();
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
 
   return (
     <div className="border-t border-gray-200 px-2 sm:px-3 py-2 bg-white rounded-b-lg">
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <input
+          id="chameleon-input"
           ref={inputRef}
           type="text"
           value={text}
@@ -160,6 +183,7 @@ const ChatInput: React.FC<{ onSubmit: (text: string) => void; isLoading: boolean
           className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-focus"
           style={{ fontSize: "16px" }}
           disabled={isLoading}
+          autoFocus
         />
         <button
           type="submit"
@@ -186,12 +210,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // >>> Added unified STATE message, kept your OPEN/CLOSE
+  // Mantieni il parent sincronizzato sulle dimensioni dell'iframe
   useEffect(() => {
     window.parent.postMessage({ type: "CHAMELEON_STATE", open: isOpen }, "*");
     window.parent.postMessage({ type: isOpen ? "CHAMELEON_OPEN" : "CHAMELEON_CLOSE" }, "*");
   }, [isOpen]);
 
+  // Click fuori per chiudere (desktop)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (chatRef.current && !chatRef.current.contains(event.target as Node) && window.innerWidth > 768) {
@@ -202,7 +227,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose]);
 
-  // >>> Extended to optionally handle CHAMELEON_LANGUAGE (kept your CLOSE)
+  // Messaggi dal parent: chiusura e lingua
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "CHAMELEON_CLOSE") onClose();
@@ -215,6 +240,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [onClose, language, setLanguage]);
 
+  // Blocca lo scroll della pagina dietro quando aperto
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
